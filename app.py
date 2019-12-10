@@ -62,9 +62,9 @@ def predict():
     #outflow = {'labels': [2010,2011,2012], 'actuals': [3,4,5], 'predicted': [6,7,8]}
 
     consump_data = [hist_year, hist_pop, hist_usage]
-    tot_outflow = (outflow['predicted'][-1] * 7.5 * 3600 * 24 * 365)/maf_to_gallon
-    print(outflow['predicted'])
-    info = {'date': year, 'pop':round(pop,1), 'tot_resv_strg': 0, 'tot_outflow': tot_outflow, 'tot_urb_usg': round(predicted_maf, 2), 'waterconv': "1 maf = ~3e11 gallons"}
+    tot_outflow = (max(outflow['predicted']) * 7.5 * 3600 * 24 * 365)/maf_to_gallon
+    #print(outflow['predicted'])
+    info = {'date': year, 'pop':round(pop,1), 'tot_resv_strg': 0, 'tot_outflow': round(tot_outflow,2), 'tot_urb_usg': round(predicted_maf, 2), 'waterconv': "1 maf = ~3e11 gallons"}
 
     return render_template('graph.html', labels=hist_year, pop=hist_pop, usage=hist_usage, outflow=outflow, info=info)
     #return jsonify(labels=hist_year, pop=hist_pop, usage=hist_usage, info=info)
@@ -82,7 +82,7 @@ def model_water_for_pop(population, already_million=False):
 def model_prophet_outflow(year):
     global prophet_outflow
     # Near future predictions only
-    if year > 2030 or year < 2019:
+    if year > 2040 or year < 2019:
         return None
 
     outflow_forecast = prophet_outflow.make_future_dataframe(periods=(year-(current_year-1))*12, freq='M')
@@ -94,7 +94,7 @@ def model_prophet_outflow(year):
     dates = outflow_forecast['ds'].apply(lambda x: str(x).split(' ')[0]).tolist()
     trend_vals = outflow_forecast['trend'].apply(lambda x: abs(x)).tolist()
     predicted = outflow_forecast['yhat'].apply(lambda x: abs(x)).tolist()
-    print(trend_vals)
+    #print(trend_vals)
     retval = [dates, trend_vals, predicted]
     return retval 
 
