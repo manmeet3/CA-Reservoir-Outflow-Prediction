@@ -28,34 +28,21 @@
 				<center>
 					<h3> California Urban Water Usage </h3>
 					<hr>
-					<p><b>Date  : </b><code>{{info.get('date')}}</code></p>
-					<p><b>Population  : </b><code>{{info.get('pop')}}</code></p>
-					<p><b>Reservoir Sorage  : </b><code>{{info.get('tot_resv_strg')}}</code></p>
+					<p><b>Year  : </b><code>{{info.get('date')}}</code></p>
+					<p><b>Population : </b><code>{{info.get('pop')}} million</code></p>
 					<p><b>Reservoir Outflow  : </b><code>{{info.get('tot_outflow')}}</code></p>
-					<p><b>Urban Water Usage  : </b><code>{{info.get('tot_urb_usg')}}</code></p>
+					<p><b>Urban Water Usage  : </b><code>{{info.get('tot_urb_usg')}} maf</code></p>
 					<p><b><b>Other Info : </b><code> {{info.get('waterconv')}}</code></p>
 					</hr>
 					<hr>
 					<form class="form-inline" method="GET" action="/">
 						<div class="input-group">
 							<span class="input-group-addon"><b>Pop in milllions</b></span>
-							<input type="number" class="form-control" name="pop" required>
+							<input type="number" class="form-control" value="40" name="pop">
 						</div>
 						<div class="input-group" style="margin-left: 2.5em;">
-							<span class="input-group-addon"><b>Info</b></span>
-							<select class="form-control" name="year">
-								<option>2020</option>
-								<option>2021</option>
-								<option>2022</option>
-								<option>2023</option>
-								<option>2024</option>
-								<option>2025</option>
-								<option>2026</option>
-								<option>2027</option>
-								<option>2028</option>
-								<option>2029</option>
-								<!--<option>DC</option>-->
-							</select>
+							<span class="input-group-addon"><b>Year</b></span>
+							<input type="number" class="form-control" value="2020" name="year" required>
 						</div> 
 						<button type="submit" class="btn btn-success" style="margin-left: 2.5em;"> Go </button>
 					</form>
@@ -116,7 +103,7 @@
 	};
 
 	// Define a plugin to provide data labels
-	Chart.plugins.register({
+var labelPts = {
 	afterDatasetsDraw: function(chart) {
 	var ctx = chart.ctx;
 
@@ -146,12 +133,13 @@
 	}
 	});
 	}
-	});
+	};
 
 
 	window.onload = function() {
 	var ctx = document.getElementById('canvas').getContext('2d');
 	window.myBar = new Chart(ctx, {
+	plugins: {labelPts},
 	type: 'bar',
 	data: barChartData,
 	options: {

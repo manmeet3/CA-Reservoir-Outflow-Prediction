@@ -10,24 +10,28 @@ from datetime import date
 import pickle
 
 app = Flask(__name__)
-global flag, table, prophet_outflow, prophet_storage, model_pop_usage
+global flag, table, pop_dict, prophet_outflow, prophet_storage, waterforpop_model
 
 current_year = 2019
+million=1000000
+maf_to_gallon = 325851428571
 
 def import_csv():
-    global table
+    global table, pop_dict
     print("Loading csv")
     table = pd.read_csv('pop_usage.csv', low_memory=False)
     table.fillna(0, inplace=True)
+    pop_dict = pd.read_csv('ca_pop.csv', low_memory=False)
+    pop_dict = pd.Series(pop_dict.Pop.values,index=pop_dict.Year).to_dict()
 
 def import_models():
-    global prophet_outflow
+    global prophet_outflow, waterforpop_model
     prophet_outflow = pickle.load(open('models/outlfow_phrophet.pkl', 'rb'))
+    waterforpop_model = pickle.load(open('models/waterforpop_model.pkl', 'rb'))
     return
 
 @app.before_first_request
 def load_csvs_models():
-    print("Before first request")
     import_csv()
     import_models()
 
@@ -35,27 +39,45 @@ def load_csvs_models():
 def predict():
     global table
 
-    pop = request.args.get('pop', default = 40000000, type = int)
-    year = request.args.get('year', default = 2020, type = int)
+    pop = request.args.get('pop', default = 40, type = int)
+    year = request.args.get('year', default = 2019, type = int)
 
-    print('pop  : %s'% pop)
-    print('year: %s'% year)
-
+    if year != 2019 and pop == 40:
+        pop = pop_dict[year]/million
+    print(pop)
     # TODO: convert import_csv to put these values into a global list of lists
-    hist_year = table['Year']
-    hist_pop = table['Pop']
-    hist_usage = table['UrbanUse']
-    hist_usage.tolist()
-    hist_pop.tolist()
-    hist_year.tolist()
-    consump_data = [hist_year, hist_pop, hist_usage]
+    hist_year = (table['Year']).tolist()
+    hist_pop = (table['Pop']).tolist()
+    hist_usage = (table['UrbanUse']).tolist()
+    #hist_usage = hist_usage.tolist()
+    #hist_pop = hist_pop.tolist()
+    #hist_year = hist_year.tolist()
+
+    hist_year.append(year)
+    hist_pop.append(pop)
+    predicted_maf = model_water_for_pop(pop) / 13100000000
+    hist_usage.append(predicted_maf)
     retval = model_prophet_outflow(year)
-    outflow = {'labels': retval[0], 'actuals': [], 'predicted': retval[1]}
+    outflow = {'labels': retval[0], 'actuals': [1], 'predicted': retval[2]}
     #outflow = {'labels': [2010,2011,2012], 'actuals': [3,4,5], 'predicted': [6,7,8]}
 
-    info = {'date':str(date.today()), 'pop':pop, 'tot_resv_strg': 5000, 'tot_outflow': 2000, 'tot_urb_usg': 3000, 'waterconv': "1 maf = ~3e11 gallons"}
+    consump_data = [hist_year, hist_pop, hist_usage]
+    tot_outflow = (outflow['predicted'][-1] * 7.5 * 3600 * 24 * 365)/maf_to_gallon
+    print(outflow['predicted'])
+    info = {'date': year, 'pop':round(pop,1), 'tot_resv_strg': 0, 'tot_outflow': tot_outflow, 'tot_urb_usg': round(predicted_maf, 2), 'waterconv': "1 maf = ~3e11 gallons"}
+
     return render_template('graph.html', labels=hist_year, pop=hist_pop, usage=hist_usage, outflow=outflow, info=info)
     #return jsonify(labels=hist_year, pop=hist_pop, usage=hist_usage, info=info)
+
+def model_water_for_pop(population, already_million=False):
+    global waterforpop_model
+    if population < 1 or population > 100:
+        return None
+    if not already_million:
+        population=population*million
+    water_needed=waterforpop_model.predict([[population]])
+    return water_needed[0]
+
 
 def model_prophet_outflow(year):
     global prophet_outflow
@@ -63,13 +85,17 @@ def model_prophet_outflow(year):
     if year > 2030 or year < 2019:
         return None
 
-    outflow_forecast = prophet_outflow.make_future_dataframe(periods=(year-current_year)*12, freq='M')
+    outflow_forecast = prophet_outflow.make_future_dataframe(periods=(year-(current_year-1))*12, freq='M')
     outflow_forecast = prophet_outflow.predict(outflow_forecast)
     outflow_forecast = outflow_forecast.drop_duplicates(subset=['yhat'], keep=False)
 
         # Returns a list of lists for values that will be plotted
     #print(outflow_forecast)
-    retval = [outflow_forecast['ds'].apply(lambda x: str(x).split(' ')[0]).tolist(), outflow_forecast['yhat'].tolist()]
+    dates = outflow_forecast['ds'].apply(lambda x: str(x).split(' ')[0]).tolist()
+    trend_vals = outflow_forecast['trend'].apply(lambda x: abs(x)).tolist()
+    predicted = outflow_forecast['yhat'].apply(lambda x: abs(x)).tolist()
+    print(trend_vals)
+    retval = [dates, trend_vals, predicted]
     return retval 
 
 def model_prophet_storage():
