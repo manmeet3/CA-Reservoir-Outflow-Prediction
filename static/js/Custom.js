@@ -1,90 +1,3 @@
-
-<!doctype html>
-<html>
-
-<head>
-	<title>Large Scale Analytics</title>
-	<meta charset="utf-8">
-	<link rel="icon" href="../static/images/favicon.ico" />
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
-	<script src="../static/js/Chart.bundle.js"></script>
-	<script src="../static/js/utils.js"></script>
-	<style>
-		canvas {
-			-moz-user-select: none;
-			-webkit-user-select: none;
-			-ms-user-select: none;
-		}
-	</style>
-</head>
-<body>
-	<div class="container-fluid">
-		<div class="row">
-			<div>
-				<center>
-					<h3> California Urban Water Usage </h3>
-					<hr>
-					<p><b>Date  : </b><code>{{info.get('date')}}</code></p>
-					<p><b>Population  : </b><code>{{info.get('pop')}}</code></p>
-					<p><b>Reservoir Sorage  : </b><code>{{info.get('tot_resv_strg')}}</code></p>
-					<p><b>Reservoir Outflow  : </b><code>{{info.get('tot_outflow')}}</code></p>
-					<p><b>Urban Water Usage  : </b><code>{{info.get('tot_urb_usg')}}</code></p>
-					<p><b><b>Other Info : </b><code> {{info.get('waterconv')}}</code></p>
-					</hr>
-					<hr>
-					<form class="form-inline" method="GET" action="/">
-						<div class="input-group">
-							<span class="input-group-addon"><b>Pop in milllions</b></span>
-							<input type="number" class="form-control" name="pop" required>
-						</div>
-						<div class="input-group" style="margin-left: 2.5em;">
-							<span class="input-group-addon"><b>Info</b></span>
-							<select class="form-control" name="year">
-								<option>2020</option>
-								<option>2021</option>
-								<option>2022</option>
-								<option>2023</option>
-								<option>2024</option>
-								<option>2025</option>
-								<option>2026</option>
-								<option>2027</option>
-								<option>2028</option>
-								<option>2029</option>
-								<!--<option>DC</option>-->
-							</select>
-						</div> 
-						<button type="submit" class="btn btn-success" style="margin-left: 2.5em;"> Go </button>
-					</form>
-					<hr>
-				</center>
-				<div style="float: left; width: 50%">
-					<canvas id="canvas">
-					</canvas>
-				</div>
-				<div style="float: right; width: 50%">
-					<canvas id="outflowChart">
-					</canvas>
-				</div>
-
-				<br>
-				<br>
-			</div>
-		</div>
-			<div class="row">
-				<div class="col-sm-8">
-					<br><br> 
-
-					<h1></h1>
-				</div>
-			</div>
-	</div>
-
-	<!-- Code for the Charts below -->
-	<script>
 	var color = Chart.helpers.color;
 	var barChartData = {
 		labels: [{% for item in labels %}
@@ -210,6 +123,7 @@
 			{% endfor %}
 			],
 		    fill: false,
+		    radius: 0,
             pointRadius: 0,
             backgroundColor: "rgba(54, 162, 235, 0.2)",
             borderColor:'rgba(54, 162, 235, 1)',
@@ -223,17 +137,8 @@
                     beginAtZero: true
                 }
             }]
-        },
-        elements: {
-            point:{
-                radius: 0
-            }
         }
     }
 });
 
 	};
-
-	</script>
-</body>
-</html>
