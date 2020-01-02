@@ -1,1 +1,0 @@
-Use Apache Mahout -- from first lecture
