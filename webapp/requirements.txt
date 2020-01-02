@@ -3,7 +3,7 @@ convertdate==2.2.0
 cycler==0.10.0
 Cython==0.29.14
 fbprophet==0.5
-Flask==0.12.2
+Flask==1.0
 holidays==0.9.11
 itsdangerous==1.1.0
 Jinja2==2.10.3
